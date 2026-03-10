@@ -511,6 +511,38 @@
                         resolve(finalChar);
                     }, duration);
                 });
+            },
+
+            // 補回先前遺失的搶答與重置邏輯
+            studentBuzz: function() {
+                if(myConn) {
+                    myConn.send({ type: 'BUZZ' });
+                    document.getElementById('buzzerBtn').disabled = true;
+                }
+            },
+
+            resetRound: function() {
+                buzzerLocked = false;
+                
+                document.getElementById('winnerArea').classList.add('hidden');
+                
+                const strip1 = document.getElementById('reel1-strip');
+                strip1.innerHTML = `<div class="w-full h-full flex items-center justify-center font-black text-7xl md:text-[8rem] text-gray-800 text-center px-2">準</div>`;
+                strip1.style.transition = 'none';
+                strip1.style.transform = 'translateY(0)';
+                strip1.classList.add('h-full');
+
+                const strip2 = document.getElementById('reel2-strip');
+                strip2.innerHTML = `<div class="w-full h-full flex items-center justify-center font-black text-7xl md:text-[8rem] text-gray-800 text-center px-2">備</div>`;
+                strip2.style.transition = 'none';
+                strip2.style.transform = 'translateY(0)';
+                strip2.classList.add('h-full');
+                
+                document.getElementById('resetBtn').classList.add('hidden');
+                document.getElementById('spinBtn').classList.remove('hidden');
+                document.getElementById('spinBtn').disabled = false;
+                
+                broadcast({ type: 'RESET' });
             }
         };
     </script>
