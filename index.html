@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>二字語詞拉霸機 - 多人搶答版</title>
+    <title>語詞大挑戰 - 多人搶答整合版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -21,30 +21,22 @@
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
         .pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         
-        /* 捲軸內部陰影，營造物理滾輪的立體感 */
-        .reel-shadow {
-            box-shadow: inset 0 20px 30px -10px rgba(0,0,0,0.3), inset 0 -20px 30px -10px rgba(0,0,0,0.3);
-        }
+        .reel-shadow { box-shadow: inset 0 20px 30px -10px rgba(0,0,0,0.3), inset 0 -20px 30px -10px rgba(0,0,0,0.3); }
 
-        /* 拉桿物理下拉動畫 (3D 視角) */
         @keyframes pullLever {
             0% { transform: rotateX(0deg); }
             40% { transform: rotateX(75deg); }
             60% { transform: rotateX(75deg); }
             100% { transform: rotateX(0deg); }
         }
-        .lever-pull {
-            animation: pullLever 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); 
-        }
+        .lever-pull { animation: pullLever 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .lever-wrapper { perspective: 800px; }
         
-        /* 隱藏滾動條但保持可滾動 */
         .hide-scrollbar::-webkit-scrollbar { width: 6px; }
         .hide-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .hide-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
         
-        /* 標楷體設定 (確保筆畫清晰，方便學生抄寫) */
-        .font-kai { font-family: 'BiauKai', 'DFKai-SB', 'Kaiti TC', '楷體', 'TW-Kai', serif; font-weight: bold; }
+        .font-kai { font-family: 'BiauKai', 'DFKai-SB', 'Kaiti TC', '楷體', serif; font-weight: bold; }
     </style>
 </head>
 <body class="h-full bg-gray-100 text-gray-800">
@@ -53,74 +45,48 @@
         <div id="loadingScreen" class="text-2xl font-bold">系統初始化中...</div>
     </div>
 
-    <!-- 首頁模板 -->
     <template id="tpl-landing">
-        <div class="flex flex-col gap-8 items-center p-8 bg-white rounded-3xl shadow-xl max-w-lg w-full text-center border-t-8 border-sky-400">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">💎 二字語詞大挑戰</h1>
-            <p class="text-gray-500 mb-4">超刺激的生字拆解搶答遊戲</p>
-            <button onclick="initTeacher()" class="w-full py-6 text-2xl font-bold text-white bg-sky-500 rounded-2xl shadow-lg hover:bg-sky-600 transition">
-                我是老師 (建立房間)
-            </button>
-            <div class="w-full border-t border-gray-200"></div>
-            <div class="w-full text-center text-gray-500">學生請掃描老師的 QR Code 加入</div>
+        <div class="flex flex-col gap-6 items-center p-8 bg-white rounded-3xl shadow-xl max-w-lg w-full text-center border-t-8 border-sky-400">
+            <h1 class="text-4xl font-bold text-gray-800">💎 語詞大挑戰</h1>
+            <p class="text-gray-500">請選擇今天的遊戲模式</p>
+            
+            <div class="grid grid-cols-1 gap-4 w-full">
+                <button onclick="initTeacher(2)" class="py-6 text-2xl font-bold text-white bg-sky-500 rounded-2xl shadow-lg hover:bg-sky-600 transition">
+                    二字語詞模式
+                </button>
+                <button onclick="initTeacher(4)" class="py-6 text-2xl font-bold text-white bg-red-500 rounded-2xl shadow-lg hover:bg-red-600 transition">
+                    四字成語模式
+                </button>
+            </div>
+            
+            <div class="w-full border-t border-gray-200 my-2"></div>
+            <p class="text-sm text-gray-400">學生端請直接掃描老師產生的 QR Code</p>
         </div>
     </template>
 
-    <!-- 老師端模板 -->
     <template id="tpl-teacher">
         <div class="w-full h-full flex p-4 gap-4 overflow-hidden bg-gray-900">
-            <!-- 左側：拉霸機主畫面 -->
             <div class="flex-1 relative bg-gray-800 rounded-3xl shadow-inner flex flex-col items-center justify-center p-8 border-4 border-gray-700">
                 
-                <!-- 實體拉霸機造型 (換成柔和的天空藍) -->
-                <div class="w-full max-w-5xl bg-sky-300 rounded-3xl border-[16px] border-sky-500 shadow-[0_15px_0_#0284c7,0_30px_50px_rgba(0,0,0,0.6)] p-6 relative flex flex-col items-center" style="height: 60vh;">
-                    
-                    <!-- 拉霸機頂部招牌 -->
-                    <div class="w-full text-center text-white font-black text-3xl md:text-4xl mb-6 tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] border-b-4 border-sky-500 pb-4">
-                        💎 二字語詞大挑戰 💎
-                    </div>
+                <div id="machine-body" class="w-full max-w-6xl rounded-3xl border-[16px] p-6 relative flex flex-col items-center" style="height: 60vh;">
+                    <div id="machine-title" class="w-full text-center text-white font-black text-3xl md:text-4xl mb-6 tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] border-b-4 pb-4"></div>
 
-                    <!-- 拉桿底座 -->
                     <div class="absolute top-1/2 -right-[46px] w-[30px] h-32 bg-gradient-to-r from-gray-500 to-gray-700 rounded-r-2xl border-y-4 border-r-4 border-gray-800 shadow-[10px_0_20px_rgba(0,0,0,0.6)] -translate-y-1/2 z-0 flex justify-center items-center">
                         <div class="w-3 h-24 bg-gray-900 rounded-full shadow-inner"></div>
                     </div>
 
-                    <!-- 3D 實體拉桿 (可點擊) -->
                     <div class="lever-wrapper absolute top-1/2 -right-10 w-20 h-56 -translate-y-1/2 z-10 cursor-pointer flex justify-center" onclick="if(!document.getElementById('spinBtn').disabled) game.teacherSpin()">
                         <div id="leverRod" class="w-full h-full relative origin-bottom transition-transform duration-300">
-                            <!-- 鐵桿 -->
                             <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-4 h-32 bg-gradient-to-r from-gray-300 via-white to-gray-500 rounded-t-full shadow-[inset_-2px_0_5px_rgba(0,0,0,0.3)]"></div>
-                            <!-- 紅色圓球 -->
                             <div class="absolute top-[10px] left-1/2 -translate-x-1/2 w-14 h-14 bg-gradient-to-br from-red-400 via-red-600 to-red-900 rounded-full shadow-[0_8px_15px_rgba(0,0,0,0.5)]"></div>
                         </div>
                     </div>
 
-                    <!-- 轉動視窗 (雙連線) -->
-                    <div class="w-full flex-1 bg-gray-200 rounded-2xl border-[12px] border-gray-300 flex items-center justify-center overflow-hidden relative p-3 gap-4 z-10">
-                        
-                        <!-- 中間對齊紅線與箭頭 -->
+                    <div id="reels-container" class="w-full flex-1 bg-gray-200 rounded-2xl border-[12px] border-gray-300 flex items-center justify-center overflow-hidden relative p-3 gap-3 z-10">
                         <div class="absolute w-full h-[2px] bg-red-500/10 top-1/2 -translate-y-1/2 z-20 pointer-events-none"></div>
-                        <div class="absolute w-3 h-6 bg-red-600/20 left-0 top-1/2 -translate-y-1/2 rounded-r-full z-20 shadow-sm pointer-events-none"></div>
-                        <div class="absolute w-3 h-6 bg-red-600/20 right-0 top-1/2 -translate-y-1/2 rounded-l-full z-20 shadow-sm pointer-events-none"></div>
-
-                        <!-- 滾輪 1 (字首) -->
-                        <div id="reel1-container" class="w-1/2 h-full bg-white rounded-xl overflow-hidden relative border-2 border-gray-400 reel-shadow">
-                            <div id="reel1-strip" class="w-full h-full flex flex-col">
-                                <div class="w-full h-full flex items-center justify-center font-kai text-7xl md:text-[8rem] text-gray-800 text-center px-2">準</div>
-                            </div>
-                        </div>
-
-                        <!-- 滾輪 2 (字尾) -->
-                        <div id="reel2-container" class="w-1/2 h-full bg-white rounded-xl overflow-hidden relative border-2 border-gray-400 reel-shadow">
-                            <div id="reel2-strip" class="w-full h-full flex flex-col">
-                                <div class="w-full h-full flex items-center justify-center font-kai text-7xl md:text-[8rem] text-gray-800 text-center px-2">備</div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 
-                <!-- 勝利者提示 -->
                 <div id="winnerArea" class="hidden absolute inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
                     <div id="winnerMsg" class="bg-gradient-to-b from-yellow-400 to-yellow-600 text-red-900 px-16 py-10 rounded-3xl shadow-[0_0_100px_rgba(253,224,71,0.5)] text-6xl md:text-8xl font-kai border-8 border-white pop-in text-center flex flex-col gap-6">
                         <span id="winnerName" class="text-white drop-shadow-lg font-black"></span>
@@ -129,467 +95,295 @@
                 </div>
             </div>
 
-            <!-- 右側：控制台 -->
             <div class="w-80 bg-white rounded-3xl shadow-lg flex flex-col p-4 overflow-hidden border-4 border-gray-300 z-20 relative">
                 <div class="mb-2 text-center flex-none">
-                    <h2 class="text-xl font-black text-gray-800 tracking-wider">控制台</h2>
+                    <h2 class="text-xl font-black text-gray-800">控制台</h2>
                     <div id="qrcode" class="flex justify-center my-2 p-2 bg-white border-2 border-dashed border-gray-300 rounded-xl"></div>
-                    <input type="text" id="roomIdDisplay" class="w-full text-center text-xs font-bold text-blue-600 bg-blue-50 py-1.5 rounded-lg border-none focus:ring-0 cursor-copy" readonly onclick="this.select();" />
+                    <input type="text" id="roomIdDisplay" class="w-full text-center text-xs font-bold text-blue-600 bg-blue-50 py-1.5 rounded-lg border-none focus:ring-0" readonly onclick="this.select();" />
                 </div>
 
-                <!-- 題庫選擇區 -->
                 <div class="mb-2 flex-none">
                     <h3 class="font-bold text-sm text-gray-600 mb-2 flex justify-between items-center border-b pb-1">
-                        <span>📚 選擇課文題庫</span>
+                        <span>📚 題庫選擇</span>
                         <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full" id="wordCountDisplay">目前 0 詞</span>
                     </h3>
-                    <div class="grid grid-cols-2 gap-1.5 max-h-24 overflow-y-auto hide-scrollbar p-1 text-sm bg-gray-50 rounded-lg border mb-2" id="lessonCheckboxes">
-                        <!-- Checkboxes 將透過 JS 動態產生 -->
-                    </div>
-
-                    <!-- 手動輸入區 -->
-                    <textarea id="wordInput" class="w-full h-16 p-2 border-2 border-gray-200 rounded-lg text-xs focus:border-sky-400 outline-none resize-none hide-scrollbar" placeholder="手動新增 (用空白鍵分隔，例如：蘋果 香蕉)"></textarea>
-                    <button onclick="updateSelectedWords()" class="mt-1 w-full py-1.5 bg-gray-700 text-white hover:bg-gray-800 rounded-lg text-xs font-bold transition shadow-md">合併匯入題庫</button>
+                    <div class="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto hide-scrollbar p-1 text-sm bg-gray-50 rounded-lg border mb-2" id="lessonCheckboxes"></div>
+                    <textarea id="wordInput" class="w-full h-16 p-2 border-2 border-gray-200 rounded-lg text-xs focus:border-sky-400 outline-none resize-none" placeholder="手動新增 (用空白分隔)"></textarea>
+                    <button onclick="updateSelectedWords()" class="mt-1 w-full py-1.5 bg-gray-700 text-white rounded-lg text-xs font-bold shadow-md">更新題庫</button>
                 </div>
 
-                <!-- 學生列表 -->
-                <div class="flex-1 overflow-y-auto mb-3 border-2 border-gray-200 rounded-xl p-2 bg-gray-50 relative hide-scrollbar">
-                    <h3 class="font-bold text-sm text-gray-600 mb-2 sticky top-0 bg-gray-50 pb-1 border-b z-10">已連線學生 (<span id="studentCount" class="text-blue-600">0</span>)</h3>
+                <div class="flex-1 overflow-y-auto mb-3 border-2 border-gray-200 rounded-xl p-2 bg-gray-50 hide-scrollbar">
+                    <h3 class="font-bold text-sm text-gray-600 mb-2 sticky top-0 bg-gray-50 pb-1 border-b z-10">學生列表 (<span id="studentCount" class="text-blue-600">0</span>)</h3>
                     <div id="studentList" class="space-y-1.5"></div>
                 </div>
 
-                <!-- 操作按鈕 -->
-                <div class="flex flex-col gap-2 mt-auto z-10 flex-none">
-                    <button id="spinBtn" onclick="game.teacherSpin()" class="py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black text-2xl shadow-[0_6px_0_#991b1b] hover:translate-y-1 hover:shadow-[0_4px_0_#991b1b] active:translate-y-2 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none tracking-widest">
-                        啟動拉桿！
-                    </button>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <!-- 學生端模板 -->
-    <template id="tpl-student">
-        <div class="w-full h-full flex flex-col items-center justify-between p-6 bg-slate-900 text-white relative overflow-hidden">
-            <div class="w-full flex justify-between items-center z-10 bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/20">
-                <div class="text-lg opacity-90">代號: <span id="myStudentName" class="font-black text-yellow-400 text-2xl"></span></div>
-                <div class="px-4 py-2 bg-white/20 rounded-full text-sm font-bold flex items-center gap-2" id="connectionStatus">
-                    <div class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>連線中
-                </div>
-            </div>
-
-            <div class="flex-1 flex flex-col items-center justify-center w-full z-10">
-                <div id="studentMessage" class="text-2xl text-gray-400 font-bold mb-6">等待老師啟動拉霸機...</div>
-                <div id="studentWord" class="text-6xl md:text-8xl font-kai text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] hidden pop-in text-center break-all leading-tight"></div>
-            </div>
-
-            <div class="w-full max-w-md aspect-square mb-8 z-10 flex items-center justify-center">
-                <button id="buzzerBtn" onclick="game.studentBuzz()" disabled 
-                    class="buzzer-btn w-64 h-64 rounded-full text-6xl font-black text-white border-8 border-red-900 flex flex-col items-center justify-center gap-2">
-                    <span>搶答</span>
-                    <span class="text-base opacity-80 font-normal tracking-widest mt-2">(等待轉停)</span>
+                <button id="spinBtn" onclick="game.teacherSpin()" class="py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black text-2xl shadow-[0_6px_0_#991b1b] active:translate-y-2 transition-all disabled:opacity-50 tracking-widest">
+                    啟動拉桿！
                 </button>
             </div>
         </div>
     </template>
 
-    <!-- 登入模板 -->
+    <template id="tpl-student">
+        <div class="w-full h-full flex flex-col items-center justify-between p-6 bg-slate-900 text-white relative overflow-hidden">
+            <div class="w-full flex justify-between items-center z-10 bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/20">
+                <div class="text-lg opacity-90">代號: <span id="myStudentName" class="font-black text-yellow-400 text-2xl"></span></div>
+                <div class="px-4 py-2 bg-white/20 rounded-full text-sm font-bold" id="connectionStatus">連線中</div>
+            </div>
+
+            <div class="flex-1 flex flex-col items-center justify-center w-full z-10 text-center">
+                <div id="studentMessage" class="text-2xl text-gray-400 font-bold mb-6">等待老師啟動拉霸機...</div>
+                <div id="studentWord" class="font-kai text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] hidden pop-in leading-tight"></div>
+            </div>
+
+            <div class="w-full max-w-md aspect-square mb-8 z-10 flex items-center justify-center">
+                <button id="buzzerBtn" onclick="game.studentBuzz()" disabled class="buzzer-btn w-64 h-64 rounded-full text-6xl font-black text-white border-8 border-red-900 flex flex-col items-center justify-center">
+                    <span>搶答</span>
+                </button>
+            </div>
+        </div>
+    </template>
+
     <template id="tpl-login">
         <div class="flex flex-col gap-6 items-center p-8 bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 border-t-8 border-sky-400">
             <h2 class="text-3xl font-black text-gray-800">加入房間</h2>
-            <div class="w-full">
-                <input type="text" id="inputName" placeholder="請輸入你的名字/代號" class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-300 rounded-xl text-xl focus:border-sky-500 focus:bg-white outline-none text-center transition-all font-bold text-gray-700">
-            </div>
-            <button onclick="joinGame()" class="w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold text-2xl shadow-[0_6px_0_#0284c7] active:translate-y-2 active:shadow-none transition-all">進入遊戲</button>
+            <input type="text" id="inputName" placeholder="請輸入你的代號" class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-300 rounded-xl text-xl text-center font-bold">
+            <button onclick="joinGame()" id="joinBtn" class="w-full py-4 bg-sky-500 text-white rounded-xl font-bold text-2xl shadow-[0_6px_0_#0284c7] active:translate-y-2">進入遊戲</button>
         </div>
     </template>
 
     <script>
-        // --- 內建題庫資料庫 (五年級 1~12課) ---
-        const wordDatabase = {
-            "第一課": ["客廳", "燈盞", "灑水", "茶壺", "菊花", "閱讀", "附近", "眼眸", "留戀", "飲料", "氣氛", "闔上", "標籤", "溶解", "咖啡", "獎券", "純粹"],
-            "第二課": ["出席", "徐徐", "掌聲", "倒映", "皇冠", "軍人", "逆向", "盲人", "扇子", "遭受", "盆栽", "階梯", "鑽石", "轟炸", "隆重", "前途", "圖鑑", "繽紛"],
-            "第三課": ["濃霧", "親吻", "一株", "芭樂", "紫色", "橘子", "趴下", "駐守", "巡邏", "闖禍", "嚴格", "車庫", "苦澀", "剩餘", "瞥見", "狂風", "口罩", "道歉"],
-            "第四課": ["老闆", "販賣", "攤位", "盜賊", "冤枉", "枉費", "分辨", "惡作劇", "武術", "嫌疑", "疑問", "押金", "審判", "處罰", "沾到", "貪心", "饒命", "計謀"],
-            "第五課": ["風俗", "善良", "寒冷", "燎原", "瓦片", "焚燒", "放鬆", "沉默", "批評", "沙啞", "增加", "闖禍", "逞強", "舌頭", "鋒利", "假若", "距離", "倘若"],
-            "第六課": ["出版", "阿姨", "勤勞", "節儉", "繩子", "廢物", "攔住", "蔬菜", "名稱", "市場", "習慣", "鞋子", "溫馨", "比喻", "缺點", "刀刃", "貧窮", "停頓"],
-            "第七課": ["小徑", "渾身", "痱子", "魁梧", "梧桐", "睡眠", "一枚", "絢麗", "湊巧", "發癢", "任務", "如何", "大概", "偶爾"],
-            "第八課": ["盒子", "瞌睡", "乾癟", "咀嚼", "剎車", "礦泉水", "澆水", "螞蟻", "膽怯", "孫子", "遲到", "洞穴", "聰明", "孝順", "解釋", "塞車", "銅板"],
-            "第九課": ["靜謐", "乍看", "困惑", "搜尋", "瀏覽", "展覽", "拜訪", "磨練", "治療", "痊癒", "職業", "證明", "核對", "詢問", "情況", "症狀", "裁判", "誇獎"],
-            "第十課": ["柳絮", "斜坡", "傑出", "滔滔不絕", "廣場", "沙漠", "乾燥", "博物館", "編織", "歷史", "星辰", "日曆", "地址", "引擎", "小狗", "渺小", "耳膜", "佳節"],
-            "第十一課": ["秦朝", "兵馬俑", "皇帝", "君王", "陵墓", "墳墓", "挖掘", "埋葬", "包含", "栩栩如生", "單純", "煥然一新", "難堪", "巔峰", "盛開", "震撼", "研究", "價值"],
-            "第十二課": ["俯瞰", "塵埃", "蘊藏", "收割", "編織", "雪橇", "滋潤", "藥劑", "按摩", "號碼", "根據", "測驗", "礫石", "妥當", "脂肪", "包裹", "諺語", "矗立"]
+        // --- 整合題庫 ---
+        const wordDatabase2 = {
+            "第一課": ["客廳", "灑水", "閱讀", "飲料", "氣氛", "獎券"],
+            "第二課": ["出席", "掌聲", "倒映", "軍人", "盲人", "繽紛"],
+            "第三課": ["濃霧", "芭樂", "巡邏", "嚴格", "車庫", "道歉"],
+            "第四課": ["老闆", "販賣", "盜賊", "分辨", "審判", "饒命"],
+            "第九課": ["靜謐", "乍看", "職業", "證明", "裁判", "誇獎"],
+            "第十二課": ["俯瞰", "收割", "滋潤", "號碼", "根據", "矗立"]
+        };
+        const wordDatabase4 = {
+            "數字成語": ["一石二鳥", "七上八下", "十全十美", "九牛一毛", "三心二意"],
+            "動物成語": ["井底之蛙", "亡羊補牢", "守株待兔", "狐假虎威", "畫蛇添足"],
+            "自然風景": ["山明水秀", "海闊天空", "風平浪靜", "春暖花開", "風和日麗"],
+            "智慧努力": ["熟能生巧", "半途而廢", "學無止境", "精益求精", "持之以恆"]
         };
 
+        let currentMode = 2; // 預設 2 字
         let words = [];       
-        let peer = null;
-        let connections = []; 
-        let myConn = null;    
-        let isTeacher = false;
-        let currentStudentName = "";
-        let buzzerLocked = false; 
+        let peer = null, connections = [], myConn = null, isTeacher = false, currentStudentName = "", buzzerLocked = false; 
 
-        // --- 自訂提示訊息 UI ---
         function showToast(msg, type='error') {
             const toast = document.createElement('div');
             const bg = type === 'error' ? 'bg-red-500 text-white' : (type === 'warning' ? 'bg-yellow-400 text-gray-900' : 'bg-green-500 text-white');
             toast.className = `fixed top-10 left-1/2 transform -translate-x-1/2 px-8 py-4 rounded-2xl shadow-2xl font-black text-2xl z-[100] pop-in border-4 border-white ${bg}`;
             toast.textContent = msg;
             document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.5s';
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
+            setTimeout(() => { toast.remove(); }, 3000);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const joinId = urlParams.get('join');
+            currentMode = parseInt(urlParams.get('mode')) || 2;
             
             if (joinId) {
                 showTemplate('tpl-login');
                 window.roomId = joinId;
-                setTimeout(() => document.getElementById('inputName').focus(), 100);
             } else {
                 showTemplate('tpl-landing');
             }
         });
 
-        function showTemplate(id) {
-            document.getElementById('app').innerHTML = document.getElementById(id).innerHTML;
-        }
+        function showTemplate(id) { document.getElementById('app').innerHTML = document.getElementById(id).innerHTML; }
 
-        function initTeacher() {
+        function initTeacher(mode) {
+            currentMode = mode;
             showTemplate('tpl-teacher');
             isTeacher = true;
 
-            renderLessonCheckboxes(); 
+            const machineBody = document.getElementById('machine-body');
+            const machineTitle = document.getElementById('machine-title');
+            const reelsContainer = document.getElementById('reels-container');
 
+            if(mode === 2) {
+                machineBody.className = machineBody.className + " bg-sky-300 border-sky-500 shadow-[0_15px_0_#0284c7]";
+                machineTitle.className = machineTitle.className + " border-sky-500";
+                machineTitle.innerText = "💎 二字語詞大挑戰 💎";
+            } else {
+                machineBody.className = machineBody.className + " bg-red-300 border-red-500 shadow-[0_15px_0_#b91c1c]";
+                machineTitle.className = machineTitle.className + " border-red-500";
+                machineTitle.innerText = "🔥 四字成語大挑戰 🔥";
+            }
+
+            // 動態產生滾輪
+            reelsContainer.innerHTML += Array.from({length: mode}, (_, i) => `
+                <div id="reel${i+1}-container" class="flex-1 h-full bg-white rounded-xl overflow-hidden relative border-2 border-gray-400 reel-shadow">
+                    <div id="reel${i+1}-strip" class="w-full h-full flex flex-col">
+                        <div class="w-full h-full flex items-center justify-center font-kai text-gray-800 text-center px-1" style="font-size: ${mode === 2 ? '8rem' : '6rem'}">${['準','備','開','始'][i] || '★'}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            renderCheckboxes();
+            
             peer = new Peer(null, { debug: 2 });
-
             peer.on('open', (id) => {
-                const baseUrl = window.location.href.split('?')[0];
-                const joinUrl = `${baseUrl}?join=${id}`;
-                
+                const joinUrl = `${window.location.href.split('?')[0]}?join=${id}&mode=${mode}`;
                 document.getElementById('roomIdDisplay').value = joinUrl;
-                
-                new QRCode(document.getElementById("qrcode"), {
-                    text: joinUrl,
-                    width: 120, 
-                    height: 120,
-                    colorDark : "#1f2937",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
+                new QRCode(document.getElementById("qrcode"), { text: joinUrl, width: 120, height: 120 });
             });
-
             peer.on('connection', (conn) => {
-                conn.on('open', () => {});
                 conn.on('data', (data) => handleTeacherData(conn, data));
                 conn.on('close', () => removeStudent(conn.peer));
             });
         }
 
-        function renderLessonCheckboxes() {
+        function renderCheckboxes() {
             const container = document.getElementById('lessonCheckboxes');
-            let html = '';
-            for (const lesson in wordDatabase) {
-                const isChecked = lesson === '第一課' ? 'checked' : '';
-                html += `
-                    <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-200 p-1.5 rounded transition">
-                        <input type="checkbox" value="${lesson}" class="lesson-cb w-4 h-4 text-sky-600 rounded border-gray-300 focus:ring-sky-500" onchange="updateSelectedWords()" ${isChecked}>
-                        <span class="text-gray-700 font-bold">${lesson}</span>
-                    </label>
-                `;
-            }
-            container.innerHTML = html;
-            updateSelectedWords(); 
+            const db = currentMode === 2 ? wordDatabase2 : wordDatabase4;
+            container.innerHTML = Object.keys(db).map(lesson => `
+                <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-200 p-1 rounded">
+                    <input type="checkbox" value="${lesson}" class="lesson-cb w-4 h-4" onchange="updateSelectedWords()">
+                    <span class="text-gray-700 font-bold">${lesson}</span>
+                </label>
+            `).join('');
+            updateSelectedWords();
         }
 
         function updateSelectedWords() {
             const checkboxes = document.querySelectorAll('.lesson-cb:checked');
+            const db = currentMode === 2 ? wordDatabase2 : wordDatabase4;
             let newWords = [];
-            
-            checkboxes.forEach(cb => {
-                newWords = newWords.concat(wordDatabase[cb.value]);
-            });
-
-            const inputElement = document.getElementById('wordInput');
-            if (inputElement && inputElement.value.trim()) {
-                const manualWords = inputElement.value.split(/\s+/).map(w => w.trim()).filter(w => w !== '');
-                newWords = newWords.concat(manualWords);
+            checkboxes.forEach(cb => { newWords = newWords.concat(db[cb.value]); });
+            const input = document.getElementById('wordInput');
+            if (input?.value.trim()) {
+                newWords = newWords.concat(input.value.split(/\s+/).filter(w => w.length === currentMode));
             }
-            
-            words = [...new Set(newWords)]; 
-            
-            const display = document.getElementById('wordCountDisplay');
-            display.textContent = `目前 ${words.length} 詞`;
-            
-            display.classList.add('bg-green-100', 'text-green-700');
-            setTimeout(() => display.classList.remove('bg-green-100', 'text-green-700'), 300);
+            words = [...new Set(newWords)];
+            document.getElementById('wordCountDisplay').textContent = `目前 ${words.length} 詞`;
         }
 
         function handleTeacherData(conn, data) {
             if (data.type === 'JOIN') {
-                conn.studentName = data.name;
-                conn.score = 0;
-                connections.push(conn);
-                updateStudentList();
-                conn.send({ type: 'WELCOME', msg: '成功加入！' });
-            } else if (data.type === 'BUZZ') {
-                if (!buzzerLocked) {
-                    buzzerLocked = true;
-                    broadcast({ type: 'WINNER', name: conn.studentName });
-                    highlightWinner(conn.studentName);
-                }
+                conn.studentName = data.name; conn.score = 0;
+                connections.push(conn); updateStudentList();
+                conn.send({ type: 'WELCOME' });
+            } else if (data.type === 'BUZZ' && !buzzerLocked) {
+                buzzerLocked = true;
+                broadcast({ type: 'WINNER', name: conn.studentName });
+                highlightWinner(conn.studentName);
             }
         }
 
-        function removeStudent(peerId) {
-            connections = connections.filter(c => c.peer !== peerId);
-            updateStudentList();
-        }
-
         function updateStudentList() {
-            const list = document.getElementById('studentList');
             document.getElementById('studentCount').textContent = connections.length;
-            list.innerHTML = connections.map(conn => `
-                <div id="student-${conn.peer}" class="flex items-center justify-between p-2 mb-1 bg-white border border-gray-200 rounded-lg shadow-sm">
+            document.getElementById('studentList').innerHTML = connections.map(conn => `
+                <div id="student-${conn.peer}" class="flex items-center justify-between p-2 mb-1 bg-white border rounded-lg shadow-sm">
                     <span class="font-bold text-gray-700 truncate w-20">${conn.studentName}</span>
                     <div class="flex items-center gap-2">
-                        <span class="score-badge bg-yellow-100 text-yellow-800 text-xs font-black px-2 py-1 rounded-md min-w-[3rem] text-center border border-yellow-300">${conn.score} 分</span>
-                        <button onclick="addScore('${conn.peer}', 1)" class="text-green-600 bg-green-50 hover:bg-green-100 rounded p-1 text-sm font-bold transition active:scale-95 border border-green-200">+1</button>
+                        <span class="score-badge bg-yellow-100 px-2 py-1 rounded text-xs font-black">${conn.score} 分</span>
+                        <button onclick="addScore('${conn.peer}', 1)" class="text-green-600 bg-green-50 rounded px-2 font-bold">+1</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function addScore(peerId, points) {
+        function addScore(peerId, pts) {
             const conn = connections.find(c => c.peer === peerId);
-            if (conn) {
-                conn.score += points;
-                const el = document.querySelector(`#student-${peerId} .score-badge`);
-                if(el) {
-                    el.textContent = `${conn.score} 分`;
-                    el.classList.add('scale-125', 'bg-green-200', 'text-green-800');
-                    setTimeout(() => el.classList.remove('scale-125', 'bg-green-200', 'text-green-800'), 300);
-                }
-            }
+            if (conn) { conn.score += pts; updateStudentList(); }
         }
 
         function highlightWinner(name) {
-            const winnerArea = document.getElementById('winnerArea');
-            const winnerName = document.getElementById('winnerName');
-            winnerName.textContent = `${name}`;
-            winnerArea.classList.remove('hidden');
-
-            const spinBtn = document.getElementById('spinBtn');
-            spinBtn.disabled = false;
-            spinBtn.innerHTML = "🎰 下一題！";
+            document.getElementById('winnerName').textContent = name;
+            document.getElementById('winnerArea').classList.remove('hidden');
+            const btn = document.getElementById('spinBtn');
+            btn.disabled = false; btn.innerHTML = "🎰 下一題！";
         }
 
-        function broadcast(data) {
-            connections.forEach(c => c.send(data));
-        }
+        function broadcast(data) { connections.forEach(c => c.send(data)); }
 
-        // --- 學生端邏輯 ---
+        // --- 學生端 ---
         function joinGame() {
             const name = document.getElementById('inputName').value.trim();
-            if (!name) return showToast("請輸入名字或代號！", "error");
-            
+            if (!name) return showToast("請輸入代號！");
             currentStudentName = name;
             showTemplate('tpl-student');
             document.getElementById('myStudentName').textContent = name;
+            document.getElementById('studentWord').style.fontSize = currentMode === 2 ? '6rem' : '4rem';
 
             peer = new Peer();
             peer.on('open', () => {
                 const conn = peer.connect(window.roomId);
-                
                 conn.on('open', () => {
-                    const status = document.getElementById('connectionStatus');
-                    status.innerHTML = `<div class="w-3 h-3 rounded-full bg-green-400 border-2 border-green-200"></div>已連線`;
-                    status.classList.replace('bg-white/20', 'bg-green-500/20');
-                    status.classList.add('text-green-300', 'border-green-500/50');
-                    
-                    conn.send({ type: 'JOIN', name: currentStudentName });
+                    document.getElementById('connectionStatus').textContent = "已連線";
+                    conn.send({ type: 'JOIN', name: name });
                     myConn = conn;
                 });
-
                 conn.on('data', handleStudentData);
-                conn.on('close', () => {
-                    showToast("與老師的連線已斷開，即將重新載入。", "error");
-                    setTimeout(() => window.location.reload(), 3000);
-                });
             });
         }
 
         function handleStudentData(data) {
-            const msgEl = document.getElementById('studentMessage');
-            const wordEl = document.getElementById('studentWord');
-            const btn = document.getElementById('buzzerBtn');
-
+            const msgEl = document.getElementById('studentMessage'), wordEl = document.getElementById('studentWord'), btn = document.getElementById('buzzerBtn');
             if (data.type === 'SPIN_START') {
-                msgEl.textContent = "🎰 拉霸轉動中...";
-                msgEl.classList.add('animate-pulse', 'text-yellow-400');
-                wordEl.classList.add('hidden');
+                msgEl.textContent = "🎰 拉霸轉動中..."; wordEl.classList.add('hidden'); btn.disabled = true;
+            } else if (data.type === 'SPIN_RESULT') {
+                msgEl.textContent = "👇 快按搶答！"; wordEl.innerHTML = data.word; wordEl.classList.remove('hidden'); btn.disabled = false;
+            } else if (data.type === 'WINNER') {
                 btn.disabled = true;
-                btn.querySelector('span:last-child').textContent = "(等待轉停)";
-            } 
-            else if (data.type === 'SPIN_RESULT') {
-                msgEl.classList.remove('animate-pulse', 'text-yellow-400');
-                msgEl.textContent = "👇 快按搶答！";
-                msgEl.classList.add('text-green-400');
-                
-                wordEl.innerHTML = data.word;
-                wordEl.classList.remove('hidden');
-                
-                btn.disabled = false;
-                btn.querySelector('span:last-child').textContent = "按我搶答！";
-            }
-            else if (data.type === 'WINNER') {
-                btn.disabled = true;
-                msgEl.classList.remove('text-green-400');
-                
-                if (data.name === currentStudentName) {
-                    msgEl.textContent = "🎉 恭喜！你搶到了！";
-                    msgEl.classList.add('text-yellow-400', 'text-4xl');
-                    btn.style.background = "#22c55e"; 
-                    btn.style.boxShadow = "0 10px 0 #16a34a";
-                } else {
-                    msgEl.textContent = `❌ ${data.name} 搶先了一步`;
-                    msgEl.classList.add('text-red-400');
-                }
-            }
-            else if (data.type === 'RESET') {
-                msgEl.textContent = "等待老師啟動拉霸機...";
-                msgEl.className = "text-2xl text-gray-400 font-bold mb-6"; 
-                wordEl.classList.add('hidden');
-                
-                btn.disabled = true;
-                btn.style.background = ""; 
-                btn.style.boxShadow = "";
-                btn.querySelector('span:last-child').textContent = "(等待轉停)";
+                msgEl.textContent = (data.name === currentStudentName) ? "🎉 恭喜搶到了！" : `❌ ${data.name} 搶先了`;
+            } else if (data.type === 'RESET') {
+                msgEl.textContent = "等待老師啟動..."; wordEl.classList.add('hidden'); btn.disabled = true;
+                btn.style.background = ""; btn.style.boxShadow = "";
             }
         }
 
-        // --- 遊戲邏輯 (Game Controller) ---
         const game = {
             teacherSpin: async function() {
-                if (connections.length === 0) {
-                    showToast("⚠️ 目前無學生連線，進入單機測試模式", "warning");
-                }
-                if (words.length < 1) {
-                    showToast("❌ 請至少在右側勾選一個題庫！", "error");
-                    return;
-                }
-
+                if (words.length < 1) return showToast("❌ 請勾選題庫！");
                 const spinBtn = document.getElementById('spinBtn');
-                spinBtn.disabled = true;
-                spinBtn.innerHTML = "啟動拉桿！"; 
-                buzzerLocked = true; 
-
-                // 無縫接軌：隱藏勝利畫面
+                spinBtn.disabled = true; buzzerLocked = true;
                 document.getElementById('winnerArea').classList.add('hidden');
-
-                // 觸發實體拉桿下拉動畫
-                const leverRod = document.getElementById('leverRod');
-                if (leverRod) {
-                    leverRod.classList.remove('lever-pull');
-                    void leverRod.offsetWidth; 
-                    leverRod.classList.add('lever-pull');
-                }
                 
-                // 發送強制重置訊號
+                const leverRod = document.getElementById('leverRod');
+                leverRod.classList.add('lever-pull');
+                setTimeout(() => leverRod.classList.remove('lever-pull'), 700);
+
                 broadcast({ type: 'RESET' });
                 
                 setTimeout(async () => {
                     broadcast({ type: 'SPIN_START' });
-
                     const targetWord = words[Math.floor(Math.random() * words.length)];
-                    
-                    const char1 = targetWord.charAt(0);
-                    const char2 = targetWord.substring(1) || " "; 
-
-                    const pool1 = words.map(w => w.charAt(0));
-                    const pool2 = words.map(w => w.substring(1) || " ");
-
-                    const p1 = this.executePhysicalSpin('reel1-container', 'reel1-strip', 3000, char1, pool1);
-                    const p2 = this.executePhysicalSpin('reel2-container', 'reel2-strip', 4500, char2, pool2);
-
-                    await Promise.all([p1, p2]);
-
-                    buzzerLocked = false; 
-                    spinBtn.disabled = false; 
+                    const promises = [];
+                    for(let i=0; i<currentMode; i++) {
+                        const char = targetWord[i] || " ";
+                        const pool = words.map(w => w[i] || " ");
+                        promises.push(this.executePhysicalSpin(`reel${i+1}-container`, `reel${i+1}-strip`, 2000 + i*800, char, pool));
+                    }
+                    await Promise.all(promises);
+                    buzzerLocked = false; spinBtn.disabled = false;
                     broadcast({ type: 'SPIN_RESULT', word: targetWord });
                 }, 100);
             },
-
-            executePhysicalSpin: function(containerId, stripId, duration, finalChar, charPool) {
+            executePhysicalSpin: function(containerId, stripId, duration, finalChar, pool) {
                 return new Promise(resolve => {
-                    const container = document.getElementById(containerId);
-                    const strip = document.getElementById(stripId);
-                    
+                    const container = document.getElementById(containerId), strip = document.getElementById(stripId);
                     const cellHeight = container.clientHeight;
-                    strip.classList.remove('h-full');
-                    
-                    const spins = 30 + Math.floor(Math.random() * 15);
-                    let stripHtml = '';
-                    
-                    for(let i = 0; i < spins - 1; i++) {
-                        const randomChar = charPool[Math.floor(Math.random() * charPool.length)];
-                        stripHtml += `<div class="w-full flex-shrink-0 flex items-center justify-center font-kai text-7xl md:text-[8rem] text-gray-800 px-2 break-all" style="height: ${cellHeight}px;">${randomChar}</div>`;
+                    const spins = 30;
+                    let html = '';
+                    for(let i=0; i<spins-1; i++) {
+                        html += `<div class="w-full flex-shrink-0 flex items-center justify-center font-kai text-gray-800" style="height: ${cellHeight}px; font-size: ${currentMode === 2 ? '8rem' : '6rem'}">${pool[Math.floor(Math.random()*pool.length)]}</div>`;
                     }
-                    
-                    stripHtml += `<div class="w-full flex-shrink-0 flex items-center justify-center font-kai text-7xl md:text-[8rem] text-red-600 px-2 break-all" style="height: ${cellHeight}px;">${finalChar}</div>`;
-                    
-                    strip.innerHTML = stripHtml;
-                    
-                    strip.style.transition = 'none';
-                    strip.style.transform = `translateY(0px)`;
-                    
+                    html += `<div class="w-full flex-shrink-0 flex items-center justify-center font-kai text-red-600" style="height: ${cellHeight}px; font-size: ${currentMode === 2 ? '8rem' : '6rem'}">${finalChar}</div>`;
+                    strip.innerHTML = html; strip.style.transition = 'none'; strip.style.transform = `translateY(0px)`;
                     void strip.offsetHeight;
-                    
-                    const targetY = -(spins - 1) * cellHeight;
-                    
                     strip.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.85, 0.2, 1.05)`;
-                    strip.style.transform = `translateY(${targetY}px)`;
-                    
-                    setTimeout(() => {
-                        resolve(finalChar);
-                    }, duration);
+                    strip.style.transform = `translateY(${-(spins-1)*cellHeight}px)`;
+                    setTimeout(resolve, duration);
                 });
             },
-
-            studentBuzz: function() {
-                if(myConn) {
-                    myConn.send({ type: 'BUZZ' });
-                    document.getElementById('buzzerBtn').disabled = true;
-                }
-            },
-
-            resetRound: function() {
-                buzzerLocked = false;
-                
-                document.getElementById('winnerArea').classList.add('hidden');
-                
-                const resetReel = (stripId, text) => {
-                    const strip = document.getElementById(stripId);
-                    strip.innerHTML = `<div class="w-full h-full flex items-center justify-center font-kai text-7xl md:text-[8rem] text-gray-800 text-center px-2">${text}</div>`;
-                    strip.style.transition = 'none';
-                    strip.style.transform = 'translateY(0)';
-                    strip.classList.add('h-full');
-                };
-
-                resetReel('reel1-strip', '準');
-                resetReel('reel2-strip', '備');
-                
-                document.getElementById('resetBtn').classList.add('hidden');
-                document.getElementById('spinBtn').classList.remove('hidden');
-                document.getElementById('spinBtn').disabled = false;
-                
-                broadcast({ type: 'RESET' });
-            }
+            studentBuzz: function() { if(myConn) myConn.send({ type: 'BUZZ' }); }
         };
     </script>
 </body>
