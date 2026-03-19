@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>五年級生字拆解拉霸機 - 多人搶答版</title>
+    <title>二字語詞拉霸機 - 多人搶答版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -42,6 +42,9 @@
         .hide-scrollbar::-webkit-scrollbar { width: 6px; }
         .hide-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .hide-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+        
+        /* 標楷體設定 (確保筆畫清晰，方便學生抄寫) */
+        .font-kai { font-family: 'BiauKai', 'DFKai-SB', 'Kaiti TC', '楷體', 'TW-Kai', serif; font-weight: bold; }
     </style>
 </head>
 <body class="h-full bg-gray-100 text-gray-800">
@@ -50,11 +53,12 @@
         <div id="loadingScreen" class="text-2xl font-bold">系統初始化中...</div>
     </div>
 
+    <!-- 首頁模板 -->
     <template id="tpl-landing">
-        <div class="flex flex-col gap-8 items-center p-8 bg-white rounded-3xl shadow-xl max-w-lg w-full text-center border-t-8 border-red-500">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">💎 語詞大挑戰 (五年級版)</h1>
-            <p class="text-gray-500 mb-4">超刺激的課堂單字搶答遊戲</p>
-            <button onclick="initTeacher()" class="w-full py-6 text-2xl font-bold text-white bg-red-500 rounded-2xl shadow-lg hover:bg-red-600 transition">
+        <div class="flex flex-col gap-8 items-center p-8 bg-white rounded-3xl shadow-xl max-w-lg w-full text-center border-t-8 border-sky-400">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">💎 二字語詞大挑戰</h1>
+            <p class="text-gray-500 mb-4">超刺激的生字拆解搶答遊戲</p>
+            <button onclick="initTeacher()" class="w-full py-6 text-2xl font-bold text-white bg-sky-500 rounded-2xl shadow-lg hover:bg-sky-600 transition">
                 我是老師 (建立房間)
             </button>
             <div class="w-full border-t border-gray-200"></div>
@@ -62,56 +66,70 @@
         </div>
     </template>
 
+    <!-- 老師端模板 -->
     <template id="tpl-teacher">
         <div class="w-full h-full flex p-4 gap-4 overflow-hidden bg-gray-900">
-            <div class="flex-1 relative bg-gray-800 rounded-3xl shadow-inner flex flex-col items-center justify-center p-8 overflow-hidden border-4 border-gray-700">
+            <!-- 左側：拉霸機主畫面 -->
+            <div class="flex-1 relative bg-gray-800 rounded-3xl shadow-inner flex flex-col items-center justify-center p-8 border-4 border-gray-700">
                 
-                <div class="w-full max-w-5xl bg-red-600 rounded-3xl border-[16px] border-red-800 shadow-[0_15px_0_#7f1d1d,0_30px_50px_rgba(0,0,0,0.6)] p-6 relative flex flex-col items-center" style="height: 60vh;">
+                <!-- 實體拉霸機造型 (換成柔和的天空藍) -->
+                <div class="w-full max-w-5xl bg-sky-300 rounded-3xl border-[16px] border-sky-500 shadow-[0_15px_0_#0284c7,0_30px_50px_rgba(0,0,0,0.6)] p-6 relative flex flex-col items-center" style="height: 60vh;">
                     
-                    <div class="w-full text-center text-yellow-300 font-black text-3xl md:text-4xl mb-6 tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] border-b-4 border-red-800 pb-4">
-                        💎 語詞大挑戰 💎
+                    <!-- 拉霸機頂部招牌 -->
+                    <div class="w-full text-center text-white font-black text-3xl md:text-4xl mb-6 tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] border-b-4 border-sky-500 pb-4">
+                        💎 二字語詞大挑戰 💎
                     </div>
 
+                    <!-- 拉桿底座 -->
                     <div class="absolute top-1/2 -right-[46px] w-[30px] h-32 bg-gradient-to-r from-gray-500 to-gray-700 rounded-r-2xl border-y-4 border-r-4 border-gray-800 shadow-[10px_0_20px_rgba(0,0,0,0.6)] -translate-y-1/2 z-0 flex justify-center items-center">
                         <div class="w-3 h-24 bg-gray-900 rounded-full shadow-inner"></div>
                     </div>
 
+                    <!-- 3D 實體拉桿 (可點擊) -->
                     <div class="lever-wrapper absolute top-1/2 -right-10 w-20 h-56 -translate-y-1/2 z-10 cursor-pointer flex justify-center" onclick="if(!document.getElementById('spinBtn').disabled) game.teacherSpin()">
                         <div id="leverRod" class="w-full h-full relative origin-bottom transition-transform duration-300">
+                            <!-- 鐵桿 -->
                             <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-4 h-32 bg-gradient-to-r from-gray-300 via-white to-gray-500 rounded-t-full shadow-[inset_-2px_0_5px_rgba(0,0,0,0.3)]"></div>
+                            <!-- 紅色圓球 -->
                             <div class="absolute top-[10px] left-1/2 -translate-x-1/2 w-14 h-14 bg-gradient-to-br from-red-400 via-red-600 to-red-900 rounded-full shadow-[0_8px_15px_rgba(0,0,0,0.5)]"></div>
                         </div>
                     </div>
 
+                    <!-- 轉動視窗 (雙連線) -->
                     <div class="w-full flex-1 bg-gray-200 rounded-2xl border-[12px] border-gray-300 flex items-center justify-center overflow-hidden relative p-3 gap-4 z-10">
                         
+                        <!-- 中間對齊紅線與箭頭 -->
                         <div class="absolute w-full h-[2px] bg-red-500/10 top-1/2 -translate-y-1/2 z-20 pointer-events-none"></div>
                         <div class="absolute w-3 h-6 bg-red-600/20 left-0 top-1/2 -translate-y-1/2 rounded-r-full z-20 shadow-sm pointer-events-none"></div>
                         <div class="absolute w-3 h-6 bg-red-600/20 right-0 top-1/2 -translate-y-1/2 rounded-l-full z-20 shadow-sm pointer-events-none"></div>
 
+                        <!-- 滾輪 1 (字首) -->
                         <div id="reel1-container" class="w-1/2 h-full bg-white rounded-xl overflow-hidden relative border-2 border-gray-400 reel-shadow">
                             <div id="reel1-strip" class="w-full h-full flex flex-col">
-                                <div class="w-full h-full flex items-center justify-center font-black text-7xl md:text-[8rem] text-gray-800 text-center px-2">準</div>
+                                <div class="w-full h-full flex items-center justify-center font-kai text-7xl md:text-[8rem] text-gray-800 text-center px-2">準</div>
                             </div>
                         </div>
 
+                        <!-- 滾輪 2 (字尾) -->
                         <div id="reel2-container" class="w-1/2 h-full bg-white rounded-xl overflow-hidden relative border-2 border-gray-400 reel-shadow">
                             <div id="reel2-strip" class="w-full h-full flex flex-col">
-                                <div class="w-full h-full flex items-center justify-center font-black text-7xl md:text-[8rem] text-gray-800 text-center px-2">備</div>
+                                <div class="w-full h-full flex items-center justify-center font-kai text-7xl md:text-[8rem] text-gray-800 text-center px-2">備</div>
                             </div>
                         </div>
 
                     </div>
                 </div>
 
+                <!-- 勝利者提示 -->
                 <div id="winnerArea" class="hidden absolute inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-                    <div id="winnerMsg" class="bg-gradient-to-b from-yellow-400 to-yellow-600 text-red-900 px-16 py-10 rounded-3xl shadow-[0_0_100px_rgba(253,224,71,0.5)] text-6xl md:text-8xl font-black border-8 border-white pop-in text-center flex flex-col gap-6">
-                        <span id="winnerName" class="text-white drop-shadow-lg"></span>
-                        <span class="text-4xl md:text-5xl">搶答成功！</span>
+                    <div id="winnerMsg" class="bg-gradient-to-b from-yellow-400 to-yellow-600 text-red-900 px-16 py-10 rounded-3xl shadow-[0_0_100px_rgba(253,224,71,0.5)] text-6xl md:text-8xl font-kai border-8 border-white pop-in text-center flex flex-col gap-6">
+                        <span id="winnerName" class="text-white drop-shadow-lg font-black"></span>
+                        <span class="text-5xl md:text-6xl">搶答成功！</span>
                     </div>
                 </div>
             </div>
 
+            <!-- 右側：控制台 -->
             <div class="w-80 bg-white rounded-3xl shadow-lg flex flex-col p-4 overflow-hidden border-4 border-gray-300 z-20 relative">
                 <div class="mb-2 text-center flex-none">
                     <h2 class="text-xl font-black text-gray-800 tracking-wider">控制台</h2>
@@ -119,20 +137,28 @@
                     <input type="text" id="roomIdDisplay" class="w-full text-center text-xs font-bold text-blue-600 bg-blue-50 py-1.5 rounded-lg border-none focus:ring-0 cursor-copy" readonly onclick="this.select();" />
                 </div>
 
+                <!-- 題庫選擇區 -->
                 <div class="mb-2 flex-none">
                     <h3 class="font-bold text-sm text-gray-600 mb-2 flex justify-between items-center border-b pb-1">
                         <span>📚 選擇課文題庫</span>
                         <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full" id="wordCountDisplay">目前 0 詞</span>
                     </h3>
-                    <div class="grid grid-cols-2 gap-1.5 max-h-32 overflow-y-auto hide-scrollbar p-1 text-sm bg-gray-50 rounded-lg border" id="lessonCheckboxes">
-                        </div>
+                    <div class="grid grid-cols-2 gap-1.5 max-h-24 overflow-y-auto hide-scrollbar p-1 text-sm bg-gray-50 rounded-lg border mb-2" id="lessonCheckboxes">
+                        <!-- Checkboxes 將透過 JS 動態產生 -->
+                    </div>
+
+                    <!-- 手動輸入區 -->
+                    <textarea id="wordInput" class="w-full h-16 p-2 border-2 border-gray-200 rounded-lg text-xs focus:border-sky-400 outline-none resize-none hide-scrollbar" placeholder="手動新增 (用空白鍵分隔，例如：蘋果 香蕉)"></textarea>
+                    <button onclick="updateSelectedWords()" class="mt-1 w-full py-1.5 bg-gray-700 text-white hover:bg-gray-800 rounded-lg text-xs font-bold transition shadow-md">合併匯入題庫</button>
                 </div>
 
+                <!-- 學生列表 -->
                 <div class="flex-1 overflow-y-auto mb-3 border-2 border-gray-200 rounded-xl p-2 bg-gray-50 relative hide-scrollbar">
                     <h3 class="font-bold text-sm text-gray-600 mb-2 sticky top-0 bg-gray-50 pb-1 border-b z-10">已連線學生 (<span id="studentCount" class="text-blue-600">0</span>)</h3>
                     <div id="studentList" class="space-y-1.5"></div>
                 </div>
 
+                <!-- 操作按鈕 -->
                 <div class="flex flex-col gap-2 mt-auto z-10 flex-none">
                     <button id="spinBtn" onclick="game.teacherSpin()" class="py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black text-2xl shadow-[0_6px_0_#991b1b] hover:translate-y-1 hover:shadow-[0_4px_0_#991b1b] active:translate-y-2 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none tracking-widest">
                         啟動拉桿！
@@ -142,6 +168,7 @@
         </div>
     </template>
 
+    <!-- 學生端模板 -->
     <template id="tpl-student">
         <div class="w-full h-full flex flex-col items-center justify-between p-6 bg-slate-900 text-white relative overflow-hidden">
             <div class="w-full flex justify-between items-center z-10 bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/20">
@@ -153,7 +180,7 @@
 
             <div class="flex-1 flex flex-col items-center justify-center w-full z-10">
                 <div id="studentMessage" class="text-2xl text-gray-400 font-bold mb-6">等待老師啟動拉霸機...</div>
-                <div id="studentWord" class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] hidden pop-in text-center break-all leading-tight"></div>
+                <div id="studentWord" class="text-6xl md:text-8xl font-kai text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] hidden pop-in text-center break-all leading-tight"></div>
             </div>
 
             <div class="w-full max-w-md aspect-square mb-8 z-10 flex items-center justify-center">
@@ -166,13 +193,14 @@
         </div>
     </template>
 
+    <!-- 登入模板 -->
     <template id="tpl-login">
-        <div class="flex flex-col gap-6 items-center p-8 bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 border-t-8 border-red-500">
+        <div class="flex flex-col gap-6 items-center p-8 bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 border-t-8 border-sky-400">
             <h2 class="text-3xl font-black text-gray-800">加入房間</h2>
             <div class="w-full">
-                <input type="text" id="inputName" placeholder="請輸入你的名字/代號" class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-300 rounded-xl text-xl focus:border-red-500 focus:bg-white outline-none text-center transition-all font-bold text-gray-700">
+                <input type="text" id="inputName" placeholder="請輸入你的名字/代號" class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-300 rounded-xl text-xl focus:border-sky-500 focus:bg-white outline-none text-center transition-all font-bold text-gray-700">
             </div>
-            <button onclick="joinGame()" class="w-full py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-2xl shadow-[0_6px_0_#991b1b] active:translate-y-2 active:shadow-none transition-all">進入遊戲</button>
+            <button onclick="joinGame()" class="w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold text-2xl shadow-[0_6px_0_#0284c7] active:translate-y-2 active:shadow-none transition-all">進入遊戲</button>
         </div>
     </template>
 
@@ -200,6 +228,20 @@
         let isTeacher = false;
         let currentStudentName = "";
         let buzzerLocked = false; 
+
+        // --- 自訂提示訊息 UI ---
+        function showToast(msg, type='error') {
+            const toast = document.createElement('div');
+            const bg = type === 'error' ? 'bg-red-500 text-white' : (type === 'warning' ? 'bg-yellow-400 text-gray-900' : 'bg-green-500 text-white');
+            toast.className = `fixed top-10 left-1/2 transform -translate-x-1/2 px-8 py-4 rounded-2xl shadow-2xl font-black text-2xl z-[100] pop-in border-4 border-white ${bg}`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -256,7 +298,7 @@
                 const isChecked = lesson === '第一課' ? 'checked' : '';
                 html += `
                     <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-200 p-1.5 rounded transition">
-                        <input type="checkbox" value="${lesson}" class="lesson-cb w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500" onchange="updateSelectedWords()" ${isChecked}>
+                        <input type="checkbox" value="${lesson}" class="lesson-cb w-4 h-4 text-sky-600 rounded border-gray-300 focus:ring-sky-500" onchange="updateSelectedWords()" ${isChecked}>
                         <span class="text-gray-700 font-bold">${lesson}</span>
                     </label>
                 `;
@@ -272,6 +314,12 @@
             checkboxes.forEach(cb => {
                 newWords = newWords.concat(wordDatabase[cb.value]);
             });
+
+            const inputElement = document.getElementById('wordInput');
+            if (inputElement && inputElement.value.trim()) {
+                const manualWords = inputElement.value.split(/\s+/).map(w => w.trim()).filter(w => w !== '');
+                newWords = newWords.concat(manualWords);
+            }
             
             words = [...new Set(newWords)]; 
             
@@ -348,7 +396,7 @@
         // --- 學生端邏輯 ---
         function joinGame() {
             const name = document.getElementById('inputName').value.trim();
-            if (!name) return alert("請輸入名字或代號！");
+            if (!name) return showToast("請輸入名字或代號！", "error");
             
             currentStudentName = name;
             showTemplate('tpl-student');
@@ -370,8 +418,8 @@
 
                 conn.on('data', handleStudentData);
                 conn.on('close', () => {
-                    alert("與老師的連線已斷開，請重新整理網頁。");
-                    window.location.reload();
+                    showToast("與老師的連線已斷開，即將重新載入。", "error");
+                    setTimeout(() => window.location.reload(), 3000);
                 });
             });
         }
@@ -429,10 +477,10 @@
         const game = {
             teacherSpin: async function() {
                 if (connections.length === 0) {
-                    if(!confirm("目前沒有學生連線，確定要單機測試轉動嗎？")) return;
+                    showToast("⚠️ 目前無學生連線，進入單機測試模式", "warning");
                 }
                 if (words.length < 1) {
-                    alert("請至少勾選一個課文題庫！");
+                    showToast("❌ 請至少在右側勾選一個題庫！", "error");
                     return;
                 }
 
@@ -490,10 +538,10 @@
                     
                     for(let i = 0; i < spins - 1; i++) {
                         const randomChar = charPool[Math.floor(Math.random() * charPool.length)];
-                        stripHtml += `<div class="w-full flex-shrink-0 flex items-center justify-center font-black text-7xl md:text-[8rem] text-gray-800 px-2 break-all" style="height: ${cellHeight}px;">${randomChar}</div>`;
+                        stripHtml += `<div class="w-full flex-shrink-0 flex items-center justify-center font-kai text-7xl md:text-[8rem] text-gray-800 px-2 break-all" style="height: ${cellHeight}px;">${randomChar}</div>`;
                     }
                     
-                    stripHtml += `<div class="w-full flex-shrink-0 flex items-center justify-center font-black text-7xl md:text-[8rem] text-red-600 px-2 break-all" style="height: ${cellHeight}px;">${finalChar}</div>`;
+                    stripHtml += `<div class="w-full flex-shrink-0 flex items-center justify-center font-kai text-7xl md:text-[8rem] text-red-600 px-2 break-all" style="height: ${cellHeight}px;">${finalChar}</div>`;
                     
                     strip.innerHTML = stripHtml;
                     
@@ -513,7 +561,6 @@
                 });
             },
 
-            // 補回先前遺失的搶答與重置邏輯
             studentBuzz: function() {
                 if(myConn) {
                     myConn.send({ type: 'BUZZ' });
@@ -526,17 +573,16 @@
                 
                 document.getElementById('winnerArea').classList.add('hidden');
                 
-                const strip1 = document.getElementById('reel1-strip');
-                strip1.innerHTML = `<div class="w-full h-full flex items-center justify-center font-black text-7xl md:text-[8rem] text-gray-800 text-center px-2">準</div>`;
-                strip1.style.transition = 'none';
-                strip1.style.transform = 'translateY(0)';
-                strip1.classList.add('h-full');
+                const resetReel = (stripId, text) => {
+                    const strip = document.getElementById(stripId);
+                    strip.innerHTML = `<div class="w-full h-full flex items-center justify-center font-kai text-7xl md:text-[8rem] text-gray-800 text-center px-2">${text}</div>`;
+                    strip.style.transition = 'none';
+                    strip.style.transform = 'translateY(0)';
+                    strip.classList.add('h-full');
+                };
 
-                const strip2 = document.getElementById('reel2-strip');
-                strip2.innerHTML = `<div class="w-full h-full flex items-center justify-center font-black text-7xl md:text-[8rem] text-gray-800 text-center px-2">備</div>`;
-                strip2.style.transition = 'none';
-                strip2.style.transform = 'translateY(0)';
-                strip2.classList.add('h-full');
+                resetReel('reel1-strip', '準');
+                resetReel('reel2-strip', '備');
                 
                 document.getElementById('resetBtn').classList.add('hidden');
                 document.getElementById('spinBtn').classList.remove('hidden');
